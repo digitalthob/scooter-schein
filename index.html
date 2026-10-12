@@ -1,0 +1,1094 @@
+<!doctype html>
+TEST äöü<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scooter-Schein</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Archivo:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: eine Spur von oben nach unten — Fortschritt als Straße, Inhalte als Stationen auf Karten mit Signalfarben-Kanten. */
+:root{
+  --paper:#EEF0F3;
+  --surface:#FFFFFF;
+  --surface-2:#E3E7EC;
+  --ink:#15171A;
+  --ink-soft:#565D66;
+  --line:#C9CFD7;
+  --signal:#FFC800;
+  --signal-ink:#15171A;
+  --blau:#17429B;
+  --rot:#C62A1C;
+  --gruen:#0B7A48;
+  --shadow:0 2px 0 var(--line);
+  --font-display:"Bungee","Archivo Black",system-ui,sans-serif;
+  --font-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111317;
+    --surface:#1A1E24;
+    --surface-2:#242A32;
+    --ink:#ECEFF3;
+    --ink-soft:#9AA4B0;
+    --line:#333B45;
+    --signal:#FFC800;
+    --signal-ink:#15171A;
+    --blau:#7BA3FF;
+    --rot:#FF6557;
+    --gruen:#3BD489;
+    --shadow:0 2px 0 var(--line);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111317;
+  --surface:#1A1E24;
+  --surface-2:#242A32;
+  --ink:#ECEFF3;
+  --ink-soft:#9AA4B0;
+  --line:#333B45;
+  --signal:#FFC800;
+  --signal-ink:#15171A;
+  --blau:#7BA3FF;
+  --rot:#FF6557;
+  --gruen:#3BD489;
+  --shadow:0 2px 0 var(--line);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:680px;
+  margin:0 auto;
+  padding-inline:16px;
+  padding-block:0 48px;
+}
+h1,h2,h3{text-wrap:balance;margin:0}
+p{margin:0}
+button{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blau);outline-offset:3px;border-radius:4px}
+
+/* ---------- Kopfleiste mit Straße ---------- */
+.topbar{
+  position:sticky;
+  top:env(safe-area-inset-top,0px);
+  z-index:40;
+  background:var(--paper);
+  border-bottom:2px solid var(--ink);
+  margin-inline:-16px;
+  padding:10px 16px 0;
+}
+.topbar-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  max-width:680px;margin:0 auto;
+}
+.brand{
+  font-family:var(--font-display);
+  font-size:15px;
+  letter-spacing:.02em;
+  display:flex;align-items:center;gap:8px;
+}
+.brand .dot{
+  width:12px;height:12px;border-radius:50%;background:var(--signal);
+  border:2px solid var(--ink);flex:none;
+}
+.step-label{
+  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-soft);font-variant-numeric:tabular-nums;
+}
+.road{
+  position:relative;height:14px;margin-top:8px;
+  background:var(--ink);
+  max-width:680px;margin-inline:auto;
+  border-radius:2px;overflow:hidden;
+}
+.road::after{
+  content:"";position:absolute;inset:0;top:50%;height:2px;transform:translateY(-50%);
+  background:repeating-linear-gradient(90deg,var(--paper) 0 10px,transparent 10px 22px);
+  opacity:.55;
+}
+.road-fill{
+  position:absolute;left:0;top:0;bottom:0;width:0%;
+  background:var(--signal);
+  transition:width .45s cubic-bezier(.4,1.3,.5,1);
+}
+
+/* ---------- Bausteine ---------- */
+.card{
+  background:var(--surface);
+  border:2px solid var(--ink);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  padding:20px;
+}
+.hazard{
+  height:10px;border-radius:14px 14px 0 0;
+  background:repeating-linear-gradient(45deg,var(--signal) 0 12px,var(--ink) 12px 24px);
+  margin:-20px -20px 18px;
+  border-bottom:2px solid var(--ink);
+}
+.eyebrow{
+  font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:52px;padding:0 22px;
+  border:2px solid var(--ink);border-radius:12px;
+  background:var(--signal);color:var(--signal-ink);
+  font-weight:800;letter-spacing:.01em;cursor:pointer;
+  box-shadow:0 3px 0 var(--ink);
+  transition:transform .08s ease,box-shadow .08s ease;
+}
+.btn:hover{transform:translateY(1px);box-shadow:0 2px 0 var(--ink)}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.btn.ghost{
+  background:transparent;color:var(--ink);box-shadow:none;
+  border-color:var(--line);min-height:44px;font-weight:700;
+}
+.btn.ghost:hover{border-color:var(--ink);transform:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:20px}
+
+/* ---------- Startbildschirm ---------- */
+.hero{margin-top:26px}
+.hero-kicker{
+  display:inline-block;background:var(--ink);color:var(--paper);
+  font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  padding:6px 10px;border-radius:999px;
+}
+.hero h1{
+  font-family:var(--font-display);
+  font-size:clamp(34px,10.5vw,56px);
+  line-height:.95;margin:14px 0 0;letter-spacing:-.01em;
+}
+.hero h1 em{font-style:normal;color:var(--blau)}
+.hero-sub{margin-top:14px;font-size:17px;color:var(--ink-soft);max-width:34em}
+.crew-note{
+  margin-top:18px;padding:12px 14px;border-left:5px solid var(--signal);
+  background:var(--surface-2);border-radius:0 10px 10px 0;font-size:14.5px;
+}
+.scene{
+  margin-top:22px;border:2px solid var(--ink);border-radius:14px;overflow:hidden;
+  background:var(--surface);
+}
+.scene svg{display:block;width:100%;height:auto;max-width:100%}
+.facts{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;
+}
+.fact{
+  background:var(--surface);border:2px solid var(--ink);border-radius:12px;
+  padding:12px 10px;text-align:center;min-width:0;
+}
+.fact b{display:block;font-family:var(--font-display);font-size:22px;line-height:1.1}
+.fact span{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-top:4px}
+@media (max-width:420px){
+  .facts{grid-template-columns:1fr 1fr}
+  .fact:last-child{grid-column:1/-1}
+}
+
+/* ---------- Stationen ---------- */
+.station{animation:slideIn .32s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.station-head{display:flex;gap:14px;align-items:flex-start}
+.station-num{
+  flex:none;width:52px;height:52px;border-radius:12px;
+  background:var(--signal);color:var(--signal-ink);border:2px solid var(--ink);
+  display:grid;place-items:center;
+  font-family:var(--font-display);font-size:21px;
+}
+.station h2{font-size:clamp(22px,5.6vw,28px);line-height:1.1;font-weight:800}
+.station-art{
+  margin:18px 0;background:var(--surface-2);border:2px solid var(--ink);
+  border-radius:12px;padding:10px;
+}
+.station-art svg{display:block;width:100%;height:auto;max-width:100%}
+.points{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.points li{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.points .mark{
+  flex:none;margin-top:2px;width:22px;height:22px;border-radius:6px;
+  display:grid;place-items:center;font-size:13px;font-weight:800;
+  border:2px solid var(--ink);
+}
+.mark.ok{background:var(--gruen);color:#fff}
+.mark.no{background:var(--rot);color:#fff}
+.mark.info{background:var(--signal);color:var(--signal-ink)}
+.merke{
+  margin-top:18px;padding:14px;border:2px dashed var(--ink);border-radius:12px;
+  background:var(--surface-2);
+}
+.merke .eyebrow{color:var(--ink)}
+.merke p{margin-top:4px;font-weight:700;font-size:16.5px}
+.dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:22px}
+.dots i{
+  width:9px;height:9px;border-radius:50%;background:var(--line);display:block;
+  transition:background .2s,transform .2s;
+}
+.dots i.done{background:var(--ink)}
+.dots i.now{background:var(--signal);transform:scale(1.45);box-shadow:0 0 0 2px var(--ink)}
+
+/* ---------- Quiz ---------- */
+.q-count{font-variant-numeric:tabular-nums}
+.q-text{font-size:clamp(20px,5.2vw,26px);font-weight:800;line-height:1.2;margin-top:10px}
+.options{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.opt{
+  width:100%;text-align:left;display:flex;gap:12px;align-items:center;
+  padding:15px 16px;border:2px solid var(--line);border-radius:12px;
+  background:var(--surface);cursor:pointer;font-weight:600;line-height:1.35;
+  transition:border-color .15s,background .15s,transform .1s;
+}
+.opt:hover:not(:disabled){border-color:var(--ink);transform:translateX(3px)}
+.opt:disabled{cursor:default}
+.opt .key{
+  flex:none;width:28px;height:28px;border-radius:8px;border:2px solid var(--line);
+  display:grid;place-items:center;font-family:var(--font-display);font-size:13px;
+}
+.opt.correct{border-color:var(--gruen);background:color-mix(in srgb,var(--gruen) 14%,var(--surface))}
+.opt.correct .key{background:var(--gruen);border-color:var(--gruen);color:#fff}
+.opt.wrong{border-color:var(--rot);background:color-mix(in srgb,var(--rot) 14%,var(--surface));animation:shake .3s}
+.opt.wrong .key{background:var(--rot);border-color:var(--rot);color:#fff}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.feedback{margin-top:16px;padding:14px;border-radius:12px;border:2px solid var(--ink);animation:slideIn .25s ease both}
+.feedback.yes{background:color-mix(in srgb,var(--gruen) 16%,var(--surface))}
+.feedback.no{background:color-mix(in srgb,var(--rot) 14%,var(--surface))}
+.feedback b{font-family:var(--font-display);font-size:17px;display:block;margin-bottom:4px}
+.score-pill{
+  font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);padding:5px 10px;border-radius:999px;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- Ergebnis ---------- */
+.result-wrap{position:relative;text-align:center}
+#confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.big-score{font-family:var(--font-display);font-size:clamp(50px,16vw,84px);line-height:1;position:relative}
+.result-title{font-family:var(--font-display);font-size:clamp(24px,6.4vw,34px);line-height:1.05;margin-top:10px}
+
+/* ---------- Team ---------- */
+.field{display:flex;flex-direction:column;gap:7px;margin-top:18px}
+.field label{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+input[type=text]{
+  width:100%;min-height:50px;padding:0 14px;font-family:inherit;font-size:16px;font-weight:600;
+  background:var(--surface);color:var(--ink);
+  border:2px solid var(--line);border-radius:11px;
+}
+input[type=text]:focus{border-color:var(--ink);outline:none}
+.add-row{display:flex;gap:8px}
+.add-row input{flex:1;min-width:0}
+.add-row .btn{min-height:50px;padding:0 18px;flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding:0;list-style:none}
+.chip{
+  display:flex;align-items:center;gap:8px;
+  background:var(--signal);color:var(--signal-ink);
+  border:2px solid var(--ink);border-radius:999px;
+  padding:7px 8px 7px 14px;font-weight:700;font-size:14.5px;
+  animation:pop .22s ease both;
+}
+@keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+.chip button{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--signal-ink);
+  background:transparent;cursor:pointer;line-height:0;display:grid;place-items:center;
+  font-size:13px;font-weight:800;flex:none;
+}
+.empty-hint{margin-top:14px;font-size:14px;color:var(--ink-soft)}
+
+/* ---------- Urkunde ---------- */
+.urkunde{
+  background:var(--surface);
+  border:3px solid var(--ink);
+  border-radius:16px;
+  padding:26px 22px;
+  margin-top:20px;
+  position:relative;
+  overflow:hidden;
+}
+.urkunde::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent 0 22px,color-mix(in srgb,var(--signal) 22%,transparent) 22px 24px);
+  pointer-events:none;opacity:.5;
+}
+.urkunde > *{position:relative}
+.u-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.u-title{font-family:var(--font-display);font-size:clamp(26px,7vw,40px);line-height:.98;margin-top:12px}
+.u-team{
+  margin-top:18px;padding:14px;border:2px solid var(--ink);border-radius:12px;
+  background:var(--signal);color:var(--signal-ink);
+}
+.u-team .eyebrow{color:var(--signal-ink);opacity:.75}
+.u-team strong{display:block;font-family:var(--font-display);font-size:clamp(20px,5.6vw,30px);line-height:1.05;margin-top:4px;word-break:break-word}
+.u-names{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0}
+.u-names li{
+  border:2px solid var(--ink);border-radius:999px;padding:6px 14px;
+  font-weight:700;background:var(--surface);
+}
+.u-rules{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.u-rules div{
+  font-size:12.5px;font-weight:700;line-height:1.25;
+  border-left:4px solid var(--signal);padding-left:8px;min-width:0;
+}
+@media (max-width:420px){.u-rules{grid-template-columns:1fr}}
+.u-foot{
+  margin-top:22px;padding-top:16px;border-top:2px solid var(--ink);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;
+}
+.u-sign{font-size:12px;color:var(--ink-soft)}
+.u-sign b{display:block;color:var(--ink);font-size:14px;border-top:2px solid var(--ink);padding-top:4px;margin-top:26px;min-width:150px}
+.stamp{
+  flex:none;width:96px;height:96px;border-radius:50%;
+  border:3px solid var(--rot);color:var(--rot);
+  display:grid;place-items:center;text-align:center;
+  font-family:var(--font-display);font-size:11px;line-height:1.15;
+  transform:rotate(-11deg);padding:8px;
+}
+.print-hint{
+  margin-top:16px;font-size:14px;color:var(--ink-soft);
+  border:2px dashed var(--line);border-radius:12px;padding:12px 14px;
+}
+kbd{
+  font-family:var(--font-body);font-size:12.5px;font-weight:800;
+  border:2px solid var(--ink);border-radius:6px;padding:1px 6px;background:var(--surface-2);
+}
+
+.footer-note{margin-top:30px;font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+@media print{
+  .topbar,.print-hint,.btn,.btn-row,.footer-note{display:none!important}
+  body{background:#fff;color:#000}
+  .wrap{max-width:none;padding:0}
+  .urkunde{border-color:#000;box-shadow:none;page-break-inside:avoid;margin:0}
+  .u-team{background:#FFC800;color:#000}
+}
+</style>
+
+<div class="wrap">
+
+  <div class="topbar" id="topbar" hidden>
+    <div class="topbar-row">
+      <div class="brand"><span class="dot"></span>SCOOTER-SCHEIN</div>
+      <div class="step-label" id="stepLabel">Station 1 / 10</div>
+    </div>
+    <div class="road"><div class="road-fill" id="roadFill"></div></div>
+  </div>
+
+  <!-- ============ START ============ -->
+  <section id="screen-start">
+    <div class="hero">
+      <span class="hero-kicker">Pflichtprogramm vor der ersten Fahrt</span>
+      <h1>Der <em>Scooter&#8209;Schein</em></h1>
+      <p class="hero-sub">Zehn Stationen, zwölf Fragen, eine Urkunde. Danach weißt du, was auf dem E&#8209;Scooter erlaubt ist, was teuer wird und was richtig wehtut.</p>
+      <div class="crew-note">
+        <strong>Moin Phil Samuel!</strong> Dein Roller ist da. Bevor du losrollst: einmal hier durchklicken.<br>
+        Und wenn Cousins, Kumpels oder die halbe Straße danebensitzen — umso besser. Einer klickt, alle raten mit. Am Ende trägt jeder seinen Namen ein und ihr bekommt eine gemeinsame Urkunde.
+      </div>
+    </div>
+
+    <div class="scene" aria-hidden="true">
+      <svg viewBox="0 0 680 230" xmlns="http://www.w3.org/2000/svg" role="img">
+        <rect width="680" height="230" fill="var(--surface)"/>
+        <g opacity=".5">
+          <rect x="60" y="30" width="26" height="70" rx="4" fill="none" stroke="var(--line)" stroke-width="3"/>
+          <rect x="520" y="20" width="34" height="80" rx="4" fill="none" stroke="var(--line)" stroke-width="3"/>
+          <rect x="580" y="45" width="28" height="55" rx="4" fill="none" stroke="var(--line)" stroke-width="3"/>
+        </g>
+        <!-- Schild -->
+        <g>
+          <rect x="420" y="26" width="76" height="76" rx="10" fill="var(--signal)" stroke="var(--ink)" stroke-width="4"/>
+          <text x="458" y="78" font-family="Bungee, sans-serif" font-size="34" fill="var(--ink)" text-anchor="middle">14</text>
+          <rect x="454" y="102" width="8" height="48" fill="var(--ink)"/>
+        </g>
+        <!-- Strasse -->
+        <rect x="0" y="150" width="680" height="80" fill="var(--ink)"/>
+        <g id="roadDashes">
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="0"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="80"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="160"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="240"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="320"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="400"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="480"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="560"/>
+          <rect y="188" width="36" height="5" fill="var(--paper)" opacity=".8" x="640"/>
+          <animateTransform attributeName="transform" type="translate" from="0 0" to="-80 0" dur="0.7s" repeatCount="indefinite"/>
+        </g>
+        <!-- Fahrer + Scooter -->
+        <g transform="translate(150,0)">
+          <g>
+            <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3; 0 0" dur="1.1s" repeatCount="indefinite"/>
+            <!-- Helm -->
+            <path d="M88 44a24 24 0 0 1 48 0v10H88z" fill="var(--blau)" stroke="var(--ink)" stroke-width="4"/>
+            <path d="M136 54h14a4 4 0 0 1 0 8h-14z" fill="var(--blau)" stroke="var(--ink)" stroke-width="4"/>
+            <!-- Kopf -->
+            <circle cx="112" cy="64" r="13" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="4"/>
+            <!-- Körper -->
+            <path d="M112 78 L104 118" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/>
+            <!-- Arm zum Lenker -->
+            <path d="M110 90 L146 100" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/>
+            <!-- Beine -->
+            <path d="M104 118 L96 150" stroke="var(--ink)" stroke-width="10" stroke-linecap="round"/>
+            <path d="M104 118 L120 148" stroke="var(--ink)" stroke-width="10" stroke-linecap="round"/>
+          </g>
+          <!-- Scooter -->
+          <path d="M150 100 L150 160" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/>
+          <path d="M136 100 L164 100" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/>
+          <path d="M70 158 L150 158" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/>
+          <path d="M70 158 L70 168" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/>
+          <!-- Plakette -->
+          <rect x="58" y="140" width="18" height="14" rx="2" fill="var(--ink)" stroke="var(--signal)" stroke-width="2.5"/>
+          <!-- Räder -->
+          <g>
+            <circle cx="152" cy="176" r="15" fill="none" stroke="var(--paper)" stroke-width="5"/>
+            <path d="M152 164 L152 188 M140 176 L164 176" stroke="var(--signal)" stroke-width="3.5">
+              <animateTransform attributeName="transform" type="rotate" from="0 152 176" to="360 152 176" dur="0.45s" repeatCount="indefinite"/>
+            </path>
+          </g>
+          <g>
+            <circle cx="70" cy="176" r="15" fill="none" stroke="var(--paper)" stroke-width="5"/>
+            <path d="M70 164 L70 188 M58 176 L82 176" stroke="var(--signal)" stroke-width="3.5">
+              <animateTransform attributeName="transform" type="rotate" from="0 70 176" to="360 70 176" dur="0.45s" repeatCount="indefinite"/>
+            </path>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="facts">
+      <div class="fact"><b>14</b><span>Mindestalter</span></div>
+      <div class="fact"><b>20</b><span>km/h max</span></div>
+      <div class="fact"><b>0,0</b><span>Promille</span></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="btnStart">Los geht's →</button>
+      <button class="btn ghost" id="btnSkipToQuiz">Direkt zum Quiz</button>
+    </div>
+
+    <p class="footer-note">Stand: Oktober 2026. Gilt bundesweit in Deutschland — in Petersberg genauso wie in Pirmasens. Kein Ersatz für die StVO, aber alles, was im Alltag zählt.</p>
+  </section>
+
+  <!-- ============ LERNEN ============ -->
+  <section id="screen-learn" hidden>
+    <div class="card station" id="stationCard"></div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
+    <div class="btn-row">
+      <button class="btn" id="btnNext">Weiter →</button>
+      <button class="btn ghost" id="btnPrev">← Zurück</button>
+    </div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="screen-quiz" hidden>
+    <div class="card" id="quizCard"></div>
+    <div class="btn-row">
+      <button class="btn" id="btnQuizNext" hidden>Weiter →</button>
+    </div>
+  </section>
+
+  <!-- ============ ERGEBNIS ============ -->
+  <section id="screen-result" hidden>
+    <div class="card result-wrap">
+      <div class="hazard"></div>
+      <canvas id="confetti"></canvas>
+      <p class="eyebrow" id="resultEyebrow">Prüfungsergebnis</p>
+      <div class="big-score" id="bigScore">0/12</div>
+      <h2 class="result-title" id="resultTitle"></h2>
+      <p id="resultText" style="margin-top:12px;color:var(--ink-soft)"></p>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn" id="btnToTeam">Urkunde ausfüllen →</button>
+        <button class="btn ghost" id="btnRetry">Quiz nochmal</button>
+        <button class="btn ghost" id="btnReview">Stationen nachlesen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TEAM ============ -->
+  <section id="screen-team" hidden>
+    <div class="card">
+      <div class="hazard"></div>
+      <p class="eyebrow">Letzter Schritt</p>
+      <h2 style="font-size:clamp(22px,5.6vw,30px);margin-top:6px;line-height:1.1">Wer hat bestanden?</h2>
+      <p style="margin-top:10px;color:var(--ink-soft)">Erst den Teamnamen, dann alle Namen eintragen, die mitgemacht haben. Alle kommen zusammen auf eine Urkunde.</p>
+
+      <div class="field">
+        <label for="teamName">Teamname</label>
+        <input type="text" id="teamName" maxlength="34" placeholder="z. B. Die Rollenden Rentner" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="memberInput">Namen der Crew</label>
+        <div class="add-row">
+          <input type="text" id="memberInput" maxlength="28" placeholder="Name eintippen" autocomplete="off">
+          <button class="btn" id="btnAddMember" type="button">+</button>
+        </div>
+      </div>
+      <ul class="chips" id="memberChips"></ul>
+      <p class="empty-hint" id="memberHint">Noch niemand eingetragen. Enter drücken zählt auch.</p>
+
+      <div class="btn-row">
+        <button class="btn" id="btnMakeUrkunde">Urkunde erstellen 🏁</button>
+        <button class="btn ghost" id="btnBackResult">← Zurück</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ URKUNDE ============ -->
+  <section id="screen-urkunde" hidden>
+    <div class="urkunde" id="urkunde">
+      <div class="u-top">
+        <div>
+          <p class="eyebrow">Scooter-Schein · Deutschland</p>
+          <h2 class="u-title">Urkunde</h2>
+        </div>
+        <div class="stamp">BE&shy;STAN&shy;DEN</div>
+      </div>
+
+      <p style="margin-top:14px;font-weight:600">Hiermit wird bestätigt, dass die folgende Crew den Scooter-Schein absolviert hat und die Regeln für E-Scooter im Straßenverkehr kennt.</p>
+
+      <div class="u-team">
+        <p class="eyebrow">Team</p>
+        <strong id="uTeam">—</strong>
+      </div>
+
+      <p class="eyebrow" style="margin-top:18px">Mit dabei</p>
+      <ul class="u-names" id="uNames"></ul>
+
+      <p class="eyebrow" style="margin-top:20px">Darauf haben wir uns geeinigt</p>
+      <div class="u-rules">
+        <div>Radweg oder Fahrbahn — niemals Gehweg</div>
+        <div>Immer allein auf dem Scooter</div>
+        <div>Helm auf, auch wenn keiner guckt</div>
+        <div>0,0 Promille, ohne Diskussion</div>
+        <div>Hände am Lenker, Handy in der Tasche</div>
+        <div>Licht an, Plakette dran</div>
+      </div>
+
+      <div class="u-foot">
+        <div class="u-sign">
+          <span id="uMeta">Prüfung bestanden</span>
+          <b>Datum &amp; Unterschrift</b>
+        </div>
+        <div class="u-sign">
+          <span>Abgenommen von</span>
+          <b>Onkel / Eltern</b>
+        </div>
+      </div>
+    </div>
+
+    <p class="print-hint">
+      <strong>Ausdrucken:</strong> <kbd>Strg</kbd>+<kbd>P</kbd> (Windows) oder <kbd>Cmd</kbd>+<kbd>P</kbd> (Mac). Es wird automatisch nur die Urkunde gedruckt — einmal für jeden aus der Crew.
+    </p>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="btnEditTeam">← Namen ändern</button>
+      <button class="btn ghost" id="btnRestart">Von vorne starten</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Daten ---------------- */
+
+  var ART = {
+    alter: '<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg"><rect x="30" y="18" width="110" height="110" rx="14" fill="var(--signal)" stroke="var(--ink)" stroke-width="5"/><text x="85" y="97" font-family="Bungee,sans-serif" font-size="52" fill="var(--ink)" text-anchor="middle">14</text><text x="180" y="62" font-family="Bungee,sans-serif" font-size="26" fill="var(--ink)">EIGENER</text><text x="180" y="96" font-family="Bungee,sans-serif" font-size="26" fill="var(--ink)">SCOOTER: OK</text><g transform="translate(400,24)"><rect x="0" y="0" width="100" height="100" rx="14" fill="var(--surface)" stroke="var(--rot)" stroke-width="5"/><text x="50" y="62" font-family="Bungee,sans-serif" font-size="30" fill="var(--rot)" text-anchor="middle">18</text><text x="50" y="84" font-family="Archivo,sans-serif" font-weight="800" font-size="13" fill="var(--rot)" text-anchor="middle">LEIHE</text></g></svg>',
+
+    plakette: '<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg"><rect x="150" y="20" width="150" height="110" rx="10" fill="var(--ink)" stroke="var(--ink)" stroke-width="4"/><rect x="162" y="32" width="126" height="86" rx="6" fill="none" stroke="var(--signal)" stroke-width="4"/><text x="225" y="72" font-family="Bungee,sans-serif" font-size="24" fill="var(--signal)" text-anchor="middle">ABC</text><text x="225" y="104" font-family="Bungee,sans-serif" font-size="24" fill="var(--signal)" text-anchor="middle">123</text><text x="330" y="60" font-family="Archivo,sans-serif" font-weight="800" font-size="17" fill="var(--ink)">klebt hinten</text><text x="330" y="86" font-family="Archivo,sans-serif" font-weight="800" font-size="17" fill="var(--ink)">neu ab 1. März</text><text x="330" y="112" font-family="Archivo,sans-serif" font-weight="800" font-size="17" fill="var(--ink)">2026/27: schwarz</text><g transform="translate(40,45)"><circle cx="40" cy="30" r="32" fill="none" stroke="var(--gruen)" stroke-width="6"/><path d="M24 31 l12 12 22-24" fill="none" stroke="var(--gruen)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g></svg>',
+
+    wo: '<svg viewBox="0 0 520 170" xmlns="http://www.w3.org/2000/svg"><g><rect x="20" y="30" width="140" height="110" rx="10" fill="var(--surface)" stroke="var(--gruen)" stroke-width="5"/><circle cx="90" cy="70" r="24" fill="var(--blau)"/><path d="M78 70h24M90 58v24" stroke="#fff" stroke-width="5" stroke-linecap="round"/><text x="90" y="120" font-family="Archivo,sans-serif" font-weight="800" font-size="15" fill="var(--gruen)" text-anchor="middle">RADWEG</text></g><g><rect x="190" y="30" width="140" height="110" rx="10" fill="var(--surface)" stroke="var(--gruen)" stroke-width="5"/><rect x="226" y="50" width="56" height="42" rx="4" fill="var(--ink)"/><rect x="226" y="68" width="56" height="4" fill="var(--signal)"/><text x="260" y="120" font-family="Archivo,sans-serif" font-weight="800" font-size="15" fill="var(--gruen)" text-anchor="middle">FAHRBAHN</text></g><g><rect x="360" y="30" width="140" height="110" rx="10" fill="var(--surface)" stroke="var(--rot)" stroke-width="5"/><circle cx="430" cy="70" r="26" fill="none" stroke="var(--rot)" stroke-width="6"/><path d="M412 88 L448 52" stroke="var(--rot)" stroke-width="6" stroke-linecap="round"/><text x="430" y="120" font-family="Archivo,sans-serif" font-weight="800" font-size="15" fill="var(--rot)" text-anchor="middle">GEHWEG</text></g></svg>',
+
+    allein: '<svg viewBox="0 0 520 160" xmlns="http://www.w3.org/2000/svg"><g transform="translate(60,10)"><circle cx="60" cy="34" r="16" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="4"/><path d="M60 50 L60 90 M60 62 L88 76 M60 90 L46 120 M60 90 L76 120" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/><circle cx="118" cy="40" r="15" fill="var(--surface-2)" stroke="var(--rot)" stroke-width="4"/><path d="M118 56 L116 92 M116 92 L104 118 M116 92 L128 118" stroke="var(--rot)" stroke-width="9" stroke-linecap="round"/><path d="M30 126 L96 126" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/><path d="M96 126 L96 72 M84 72 L110 72" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><circle cx="30" cy="140" r="12" fill="none" stroke="var(--ink)" stroke-width="5"/><circle cx="98" cy="140" r="12" fill="none" stroke="var(--ink)" stroke-width="5"/></g><g transform="translate(300,30)"><circle cx="60" cy="50" r="46" fill="none" stroke="var(--rot)" stroke-width="10"/><path d="M28 82 L92 18" stroke="var(--rot)" stroke-width="10" stroke-linecap="round"/></g><text x="300" y="150" font-family="Bungee,sans-serif" font-size="20" fill="var(--rot)">NUR EINER</text></svg>',
+
+    helm: '<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg"><g transform="translate(60,10)"><path d="M10 80a60 60 0 0 1 120 0v8H10z" fill="var(--blau)" stroke="var(--ink)" stroke-width="5"/><path d="M130 86h32a8 8 0 0 1 0 16h-32z" fill="var(--blau)" stroke="var(--ink)" stroke-width="5"/><path d="M36 48 L52 28 M70 36 L70 14 M104 48 L88 28" stroke="var(--signal)" stroke-width="6" stroke-linecap="round"/><circle cx="70" cy="110" r="9" fill="var(--ink)"/></g><text x="230" y="60" font-family="Bungee,sans-serif" font-size="22" fill="var(--ink)">KEINE PFLICHT.</text><text x="230" y="96" font-family="Bungee,sans-serif" font-size="22" fill="var(--signal)">TROTZDEM AUF.</text><text x="230" y="126" font-family="Archivo,sans-serif" font-weight="700" font-size="15" fill="var(--ink-soft)">Der Kopf ist das Problem, nicht das Knie.</text></svg>',
+
+    handy: '<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg"><g transform="translate(70,20)"><rect x="0" y="0" width="76" height="118" rx="12" fill="var(--ink)" stroke="var(--ink)" stroke-width="4"/><rect x="8" y="14" width="60" height="88" rx="4" fill="var(--surface-2)"/><circle cx="38" cy="112" r="4" fill="var(--surface-2)"/><g transform="translate(-6,10)"><circle cx="44" cy="48" r="44" fill="none" stroke="var(--rot)" stroke-width="9"/><path d="M14 78 L74 18" stroke="var(--rot)" stroke-width="9" stroke-linecap="round"/></g></g><text x="210" y="52" font-family="Bungee,sans-serif" font-size="20" fill="var(--ink)">BEIDE HÄNDE</text><text x="210" y="82" font-family="Bungee,sans-serif" font-size="20" fill="var(--ink)">AM LENKER</text><g transform="translate(210,96)"><path d="M6 20a18 18 0 0 1 36 0v14" fill="none" stroke="var(--rot)" stroke-width="5"/><rect x="0" y="20" width="12" height="20" rx="4" fill="var(--rot)"/><rect x="36" y="20" width="12" height="20" rx="4" fill="var(--rot)"/><text x="62" y="38" font-family="Archivo,sans-serif" font-weight="800" font-size="15" fill="var(--ink-soft)">Ein Ohr bleibt frei</text></g></svg>',
+
+    promille: '<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg"><g transform="translate(60,16)"><path d="M14 10 h72 l-10 48 a26 26 0 0 1 -52 0z" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="5"/><path d="M50 84 v22 M30 108 h40" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><g transform="translate(6,2)"><circle cx="44" cy="56" r="52" fill="none" stroke="var(--rot)" stroke-width="10"/><path d="M8 92 L80 20" stroke="var(--rot)" stroke-width="10" stroke-linecap="round"/></g></g><text x="210" y="70" font-family="Bungee,sans-serif" font-size="52" fill="var(--rot)">0,0</text><text x="210" y="104" font-family="Archivo,sans-serif" font-weight="800" font-size="16" fill="var(--ink)">für alle unter 21 — ohne Ausnahme</text></svg>',
+
+    technik: '<svg viewBox="0 0 520 160" xmlns="http://www.w3.org/2000/svg"><g transform="translate(50,18)"><circle cx="62" cy="62" r="56" fill="var(--surface)" stroke="var(--ink)" stroke-width="5"/><path d="M26 92 A46 46 0 0 1 62 16" fill="none" stroke="var(--gruen)" stroke-width="9" stroke-linecap="round"/><path d="M62 16 A46 46 0 0 1 98 92" fill="none" stroke="var(--rot)" stroke-width="9" stroke-linecap="round"/><path d="M62 62 L36 34" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/><circle cx="62" cy="62" r="8" fill="var(--ink)"/><text x="62" y="108" font-family="Bungee,sans-serif" font-size="19" fill="var(--ink)" text-anchor="middle">20</text></g><g font-family="Archivo,sans-serif" font-weight="800" font-size="16" fill="var(--ink)"><text x="200" y="40">Licht vorn + hinten</text><text x="200" y="70">Klingel</text><text x="200" y="100">Zwei Bremsen</text><text x="200" y="130" fill="var(--rot)">Tuning = Straftat</text></g><g stroke="var(--signal)" stroke-width="5" stroke-linecap="round"><path d="M182 34 h8"/><path d="M182 64 h8"/><path d="M182 94 h8"/></g><path d="M182 124 h8" stroke="var(--rot)" stroke-width="5" stroke-linecap="round"/></svg>',
+
+    unfall: '<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg"><g transform="translate(56,24)"><rect x="0" y="0" width="104" height="104" rx="14" fill="var(--rot)" stroke="var(--ink)" stroke-width="5"/><text x="52" y="68" font-family="Bungee,sans-serif" font-size="34" fill="#fff" text-anchor="middle">112</text></g><g font-family="Archivo,sans-serif" font-weight="800" font-size="17" fill="var(--ink)"><text x="200" y="44">1 · Anhalten</text><text x="200" y="76">2 · Absichern &amp; helfen</text><text x="200" y="108">3 · 112 + Eltern anrufen</text></g><g transform="translate(430,30)"><path d="M30 0 L60 56 L0 56 Z" fill="var(--signal)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/><text x="30" y="46" font-family="Bungee,sans-serif" font-size="26" fill="var(--ink)" text-anchor="middle">!</text></g></svg>',
+
+    zukunft: '<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg"><g transform="translate(40,26)"><rect x="0" y="0" width="92" height="88" rx="10" fill="var(--surface)" stroke="var(--ink)" stroke-width="5"/><text x="46" y="38" font-family="Archivo,sans-serif" font-weight="800" font-size="14" fill="var(--ink-soft)" text-anchor="middle">MÄRZ</text><text x="46" y="70" font-family="Bungee,sans-serif" font-size="26" fill="var(--ink)" text-anchor="middle">2027</text></g><path d="M156 70 L206 70 M192 56 L208 70 L192 84" fill="none" stroke="var(--signal)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(240,18)"><circle cx="26" cy="74" r="20" fill="none" stroke="var(--ink)" stroke-width="5"/><circle cx="96" cy="74" r="20" fill="none" stroke="var(--ink)" stroke-width="5"/><path d="M26 74 L58 34 L82 74 M58 34 L96 74 M46 34 h24" stroke="var(--ink)" stroke-width="5" stroke-linecap="round" fill="none"/><text x="140" y="56" font-family="Bungee,sans-serif" font-size="17" fill="var(--ink)">FAST WIE</text><text x="140" y="82" font-family="Bungee,sans-serif" font-size="17" fill="var(--signal)">EIN FAHRRAD</text></g></svg>'
+  };
+
+  var STATIONS = [
+    { n:1, titel:"Ab 14 bist du dabei", art:ART.alter,
+      punkte:[
+        {t:"ok", x:"Mindestalter sind 14 Jahre. Du brauchst keinen Führerschein und musst keine Prüfung machen — nur wissen, was du tust."},
+        {t:"no", x:"Leih-Scooter von Bolt, Tier & Co. sind trotzdem tabu: die Anbieter geben sie erst ab 18 raus."},
+        {t:"info", x:"Unter 14 am Lenker? Die Polizei kann den Scooter einkassieren und ruft zu Hause an. Ist schon öfter passiert."}
+      ],
+      merke:"Eigener Scooter: ab 14. Leihscooter: ab 18." },
+
+    { n:2, titel:"Ohne Plakette läuft nix", art:ART.plakette,
+      punkte:[
+        {t:"info", x:"Dein Scooter gilt rechtlich als Kraftfahrzeug. Deshalb braucht er eine eigene Haftpflichtversicherung — die deiner Eltern zählt nicht."},
+        {t:"ok", x:"Der Nachweis ist die Klebeplakette hinten. Sie wird jedes Jahr am 1. März erneuert. Aktuell, also 2026/27, ist sie schwarz."},
+        {t:"no", x:"Abgelaufene oder fehlende Plakette: 40 €. Gar keine Versicherung: das ist keine Ordnungswidrigkeit mehr, sondern eine Straftat."}
+      ],
+      merke:"Kein gültiger Aufkleber hinten dran — dann bleibt der Roller stehen." },
+
+    { n:3, titel:"Radweg ja, Gehweg nein", art:ART.wo,
+      punkte:[
+        {t:"ok", x:"Erlaubt sind Radweg, Radfahrstreifen und Fahrradstraße. Gibt es keinen Radweg, gehörst du auf die Fahrbahn — rechts, hintereinander."},
+        {t:"no", x:"Gehweg, Bürgersteig und Fußgängerzone sind verboten. Nur wenn ein Schild E-Scooter ausdrücklich erlaubt, darfst du rein."},
+        {t:"no", x:"Einbahnstraßen nur in Fahrtrichtung. Ausnahme: das Zusatzschild „Radfahrer frei“ hängt darunter."},
+        {t:"info", x:"Auf dem Gehweg erwischt: 15 €, mit Gefährdung oder Sachschaden bis 30 €."}
+      ],
+      merke:"Absteigen und schieben ist überall erlaubt. Das ist der Cheatcode." },
+
+    { n:4, titel:"Einer. Nur einer.", art:ART.allein,
+      punkte:[
+        {t:"no", x:"E-Scooter sind für genau eine Person zugelassen. Zu zweit ist immer verboten, auch auf den letzten 200 Metern."},
+        {t:"info", x:"Zu zweit wird der Bremsweg länger und das Lenken kippelig. Die meisten üblen Stürze passieren genau so."},
+        {t:"info", x:"Kostet 10 € Bußgeld. Ein kaputter Zahn kostet deutlich mehr."}
+      ],
+      merke:"Kumpel mitnehmen geht nicht. Zweiter Roller oder laufen." },
+
+    { n:5, titel:"Helm auf, auch ohne Pflicht", art:ART.helm,
+      punkte:[
+        {t:"info", x:"In Deutschland gibt es keine Helmpflicht für E-Scooter. Das heißt nur, dass niemand dich zwingt — nicht, dass es ohne schlau wäre."},
+        {t:"no", x:"Bei schweren E-Scooter-Unfällen ist überdurchschnittlich oft der Kopf betroffen. Genau das ist der Teil, den man nicht reparieren kann."},
+        {t:"ok", x:"Ein normaler Fahrradhelm reicht völlig. Einmal kaufen, dann liegt er am Roller und die Frage stellt sich nicht mehr."}
+      ],
+      merke:"20 km/h fühlen sich harmlos an. Asphalt findet das anders." },
+
+    { n:6, titel:"Hände an den Lenker", art:ART.handy,
+      punkte:[
+        {t:"no", x:"Handy in der Hand während der Fahrt ist verboten und teuer. Nebenbei siehst du damit weder das Schlagloch noch die offene Autotür."},
+        {t:"info", x:"Musik geht, aber nur mit einem freien Ohr. Zu laute Kopfhörer können bis zu 50 € kosten, weil du nichts mehr hörst."},
+        {t:"ok", x:"Navi vorher einstellen oder kurz anhalten. Zehn Sekunden Pause sind günstiger als jede Alternative."}
+      ],
+      merke:"Beide Hände am Lenker, ein Ohr im Straßenverkehr." },
+
+    { n:7, titel:"0,0 — und zwar wirklich 0,0", art:ART.promille,
+      punkte:[
+        {t:"no", x:"Für alle unter 21 gilt absolutes Alkoholverbot: 0,0 Promille. Kein „war nur ein Schluck“, keine Toleranz."},
+        {t:"info", x:"Verstoß: rund 250 € und ein Punkt in Flensburg. Punkte bekommst du auch ohne Autoführerschein — die warten dann einfach auf dich."},
+        {t:"no", x:"Ab 0,5 Promille: 500 €, zwei Punkte, Fahrverbot. Ab 1,1 Promille ist es eine Straftat."},
+        {t:"info", x:"Das Ganze landet in der Akte und kann dir später den Autoführerschein schwer machen."}
+      ],
+      merke:"Was getrunken? Dann wird geschoben oder stehen gelassen." },
+
+    { n:8, titel:"Technik-Check vor der Fahrt", art:ART.technik,
+      punkte:[
+        {t:"ok", x:"Pflicht am Scooter: Licht vorn und hinten, Rückstrahler, eine Klingel und zwei voneinander unabhängige Bremsen."},
+        {t:"info", x:"Ab Werk sind maximal 20 km/h erlaubt. Mehr ist nicht vorgesehen, egal was im Netz steht."},
+        {t:"no", x:"Tuning killt die Betriebserlaubnis. Ohne die ist die Versicherung weg, und dann fährst du eine Straftat spazieren. Kein Flex, nur Ärger."},
+        {t:"info", x:"Im Dunkeln: Licht an, helle Jacke, Reflektoren. Autofahrer sehen dich sonst schlicht nicht."}
+      ],
+      merke:"30 Sekunden vor dem Losfahren: Bremsen, Licht, Reifen, Akku." },
+
+    { n:9, titel:"Wenn's kracht", art:ART.unfall,
+      punkte:[
+        {t:"no", x:"Anhalten. Immer. Wegfahren ist Unfallflucht — auch auf dem Scooter, auch mit 14, auch bei einem Kratzer."},
+        {t:"ok", x:"Unfallstelle sichern, Verletzten helfen, 112 rufen. Der Notruf ist kostenlos und nie peinlich."},
+        {t:"ok", x:"Namen und Adressen austauschen, Fotos machen, Eltern anrufen. Niemand erwartet, dass du das allein regelst."}
+      ],
+      merke:"Stehenbleiben ist nie der Fehler. Wegfahren immer." },
+
+    { n:10, titel:"Bonus: Was sich gerade ändert", art:ART.zukunft,
+      punkte:[
+        {t:"info", x:"Die eKFV-Novelle steht seit Februar 2026 im Bundesgesetzblatt. Ab März 2027 werden E-Scooter in der StVO weitgehend Fahrrädern gleichgestellt."},
+        {t:"info", x:"Neu zugelassene Modelle brauchen dann Blinker. Scooter, die es schon gibt, dürfen weiter fahren."},
+        {t:"info", x:"Seit dem 1. Oktober 2026 gilt für E-Scooter die Gefährdungshaftung — ähnlich wie bei Autos."},
+        {t:"ok", x:"Heißt für dich: Die Regeln oben gelten jetzt. Wenn sich 2027 etwas ändert, nochmal kurz nachlesen."}
+      ],
+      merke:"Regeln ändern sich. Einmal im Jahr prüfen schadet nicht." }
+  ];
+
+  var QUIZ = [
+    { f:"Ab wie vielen Jahren darfst du einen eigenen E-Scooter im Straßenverkehr fahren?",
+      o:["Ab 12","Ab 14","Ab 16","Ab 18"], r:1,
+      e:"14 Jahre, bundesweit. Ohne Führerschein, ohne Prüfung." },
+
+    { f:"Du stehst vor einem Leih-Scooter und bist 14. Darfst du ihn ausleihen?",
+      o:["Klar, gleiche Regel wie beim eigenen","Nein, die Anbieter verleihen erst ab 18","Nur mit Erlaubnis der Eltern","Nur tagsüber"], r:1,
+      e:"Das Gesetz sagt 14, die Anbieter sagen 18. Und deren AGB gewinnen an der App." },
+
+    { f:"Welche Farbe hat die Versicherungsplakette aktuell (2026/27)?",
+      o:["Grün","Blau","Schwarz","Gelb"], r:2,
+      e:"Schwarz. Die Farbe wechselt jedes Jahr am 1. März." },
+
+    { f:"Vor dir liegt ein Radweg, daneben ein Gehweg. Wo fährst du?",
+      o:["Radweg","Gehweg, ist sicherer","Egal, Hauptsache rechts","Abwechselnd"], r:0,
+      e:"Radweg. Der Gehweg gehört den Fußgängern — dort kostet es 15 bis 30 €." },
+
+    { f:"Es gibt keinen Radweg. Was jetzt?",
+      o:["Auf den Gehweg ausweichen","Auf die Fahrbahn","Schieben, sonst nichts","Zur nächsten Straße mit Radweg fahren"], r:1,
+      e:"Dann gehörst du auf die Fahrbahn: rechts fahren, hintereinander, Handzeichen beim Abbiegen." },
+
+    { f:"Dein Cousin will sich hinten draufstellen, nur bis zur Ecke.",
+      o:["Geht klar, kurze Strecke","Nur ohne Motor","Nein, E-Scooter sind für eine Person","Nur wenn beide einen Helm tragen"], r:2,
+      e:"Immer nur eine Person. Kostet 10 € — und zu zweit stürzt man deutlich leichter." },
+
+    { f:"Gilt in Deutschland eine Helmpflicht auf dem E-Scooter?",
+      o:["Ja, ab 20 km/h","Ja, unter 18","Nein, aber sehr zu empfehlen","Nein, Helme sind sogar verboten"], r:2,
+      e:"Keine Pflicht. Trotzdem: Bei schweren Unfällen trifft es überdurchschnittlich oft den Kopf." },
+
+    { f:"Wie viel Alkohol darfst du mit 14 auf dem Scooter im Blut haben?",
+      o:["0,0 Promille","0,3 Promille","0,5 Promille","Egal, ist kein Auto"], r:0,
+      e:"0,0 — das gilt für alle unter 21. Verstoß: rund 250 € und ein Punkt in Flensburg." },
+
+    { f:"Du fährst über eine rote Ampel. Was passiert, wenn es auffliegt?",
+      o:["Nichts, gilt nur für Autos","60 € und ein Punkt","Verwarnung ohne Folgen","Der Scooter wird beschlagnahmt"], r:1,
+      e:"60 € plus ein Punkt in Flensburg. Ampeln gelten für dich genauso." },
+
+    { f:"Eine Nachricht kommt rein. Du bist mitten auf der Straße.",
+      o:["Kurz draufgucken geht","Mit einer Hand tippen","Liegen lassen oder anhalten","Freisprechen über laute Kopfhörer"], r:2,
+      e:"Handy in die Hand nehmen ist verboten und teuer. Anhalten kostet zehn Sekunden." },
+
+    { f:"Jemand bietet an, deinen Scooter auf 35 km/h zu tunen.",
+      o:["Nice, mehr Speed","Nur für Privatgelände okay — auf der Straße ist die Betriebserlaubnis weg","Erlaubt, wenn man vorsichtig fährt","Egal, merkt keiner"], r:1,
+      e:"Ohne Betriebserlaubnis erlischt die Versicherung. Dann fährst du eine Straftat durch die Gegend." },
+
+    { f:"Du streifst beim Vorbeifahren ein geparktes Auto. Niemand ist zu sehen.",
+      o:["Weiterfahren, war ja nur ein Kratzer","Zettel hinter den Scheibenwischer und los","Warten, Polizei rufen oder Eltern anrufen","Foto machen und weiterfahren"], r:2,
+      e:"Wegfahren ist Unfallflucht, auch mit 14. Ein Zettel allein reicht rechtlich nicht — warten und melden." }
+  ];
+
+  var GOOD = ["Safe.","Sitzt.","Richtig.","Stark.","Genau so."];
+  var BAD  = ["Knapp daneben.","Nope.","Fast.","Leider nicht.","Noch nicht."];
+
+  var PASS = 9;
+
+  /* ---------------- Status ---------------- */
+
+  var state = { station:0, qi:0, score:0, answered:false, team:"", members:[] };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var screens = ["screen-start","screen-learn","screen-quiz","screen-result","screen-team","screen-urkunde"];
+
+  function show(id){
+    screens.forEach(function(s){ var el = $(s); if(el) el.hidden = (s !== id); });
+    $("topbar").hidden = (id === "screen-start");
+    window.scrollTo({top:0, behavior:"instant"});
+  }
+
+  function save(){
+    try{
+      localStorage.setItem("scooterschein", JSON.stringify({
+        station:state.station, score:state.score, team:state.team, members:state.members
+      }));
+    }catch(e){}
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem("scooterschein");
+      if(!raw) return;
+      var d = JSON.parse(raw);
+      if(d && typeof d === "object"){
+        if(typeof d.team === "string") state.team = d.team;
+        if(Array.isArray(d.members)) state.members = d.members.slice(0,16);
+      }
+    }catch(e){}
+  }
+
+  function setProgress(pct, label){
+    $("roadFill").style.width = Math.max(0, Math.min(100, pct)) + "%";
+    $("stepLabel").textContent = label;
+  }
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c];
+    });
+  }
+
+  /* ---------------- Stationen ---------------- */
+
+  function renderStation(){
+    var s = STATIONS[state.station];
+    var marks = { ok:"✓", no:"✕", info:"i" };
+    var html = '<div class="hazard"></div>'
+      + '<div class="station-head">'
+      +   '<div class="station-num">' + s.n + '</div>'
+      +   '<div style="min-width:0"><p class="eyebrow">Station ' + s.n + ' von ' + STATIONS.length + '</p>'
+      +   '<h2>' + esc(s.titel) + '</h2></div>'
+      + '</div>'
+      + '<div class="station-art" aria-hidden="true">' + s.art + '</div>'
+      + '<ul class="points">';
+    s.punkte.forEach(function(p){
+      html += '<li><span class="mark ' + p.t + '" aria-hidden="true">' + marks[p.t] + '</span><span>' + esc(p.x) + '</span></li>';
+    });
+    html += '</ul><div class="merke"><p class="eyebrow">Merksatz</p><p>' + esc(s.merke) + '</p></div>';
+
+    var card = $("stationCard");
+    card.innerHTML = html;
+    card.classList.remove("station");
+    void card.offsetWidth;
+    card.classList.add("station");
+
+    var dots = "";
+    for(var i=0;i<STATIONS.length;i++){
+      dots += '<i class="' + (i < state.station ? "done" : (i === state.station ? "now" : "")) + '"></i>';
+    }
+    $("dots").innerHTML = dots;
+
+    $("btnPrev").hidden = (state.station === 0);
+    $("btnNext").textContent = (state.station === STATIONS.length - 1) ? "Zur Prüfung 🏁" : "Weiter →";
+    setProgress((state.station) / STATIONS.length * 100, "Station " + s.n + " / " + STATIONS.length);
+    save();
+  }
+
+  /* ---------------- Quiz ---------------- */
+
+  function renderQuestion(){
+    var q = QUIZ[state.qi];
+    state.answered = false;
+    var keys = ["A","B","C","D"];
+    var html = '<div class="hazard"></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'
+      +   '<p class="eyebrow q-count">Frage ' + (state.qi + 1) + ' von ' + QUIZ.length + '</p>'
+      +   '<span class="score-pill">' + state.score + ' richtig</span>'
+      + '</div>'
+      + '<h2 class="q-text">' + esc(q.f) + '</h2>'
+      + '<div class="options" id="opts">';
+    q.o.forEach(function(o,i){
+      html += '<button class="opt" data-i="' + i + '" type="button"><span class="key" aria-hidden="true">' + keys[i] + '</span><span>' + esc(o) + '</span></button>';
+    });
+    html += '</div><div id="fb"></div>';
+
+    $("quizCard").innerHTML = html;
+    $("btnQuizNext").hidden = true;
+
+    var opts = $("opts").querySelectorAll(".opt");
+    Array.prototype.forEach.call(opts, function(b){
+      b.addEventListener("click", function(){ answer(parseInt(b.dataset.i,10), opts); });
+    });
+
+    setProgress(state.qi / QUIZ.length * 100, "Frage " + (state.qi + 1) + " / " + QUIZ.length);
+  }
+
+  function answer(i, opts){
+    if(state.answered) return;
+    state.answered = true;
+    var q = QUIZ[state.qi];
+    var right = (i === q.r);
+    if(right) state.score++;
+
+    Array.prototype.forEach.call(opts, function(b){
+      var bi = parseInt(b.dataset.i,10);
+      b.disabled = true;
+      if(bi === q.r) b.classList.add("correct");
+      else if(bi === i) b.classList.add("wrong");
+    });
+
+    var phrase = right ? GOOD[Math.floor(Math.random()*GOOD.length)] : BAD[Math.floor(Math.random()*BAD.length)];
+    $("fb").innerHTML = '<div class="feedback ' + (right ? "yes" : "no") + '"><b>' + phrase + '</b>' + esc(q.e) + '</div>';
+
+    $("btnQuizNext").hidden = false;
+    $("btnQuizNext").textContent = (state.qi === QUIZ.length - 1) ? "Ergebnis ansehen →" : "Nächste Frage →";
+  }
+
+  /* ---------------- Ergebnis ---------------- */
+
+  function renderResult(){
+    var passed = state.score >= PASS;
+    $("bigScore").textContent = state.score + "/" + QUIZ.length;
+    $("resultEyebrow").textContent = passed ? "Bestanden" : "Noch nicht bestanden";
+    $("resultTitle").textContent = passed
+      ? "Scooter-Schein verdient."
+      : "Fast. Eine Runde fehlt noch.";
+    $("resultText").textContent = passed
+      ? "Du brauchst " + PASS + " richtige Antworten — die hast du. Jetzt noch die Urkunde ausfüllen, dann ist der Roller offiziell freigegeben."
+      : "Für den Schein brauchst du mindestens " + PASS + " von " + QUIZ.length + " richtigen Antworten. Lies die Stationen nochmal durch, dann klappt das.";
+    $("btnToTeam").hidden = !passed;
+    setProgress(100, "Ergebnis");
+    if(passed) confetti();
+    save();
+  }
+
+  function confetti(){
+    var c = $("confetti");
+    if(!c || !c.getContext) return;
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var box = c.parentElement.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = box.width * dpr; c.height = box.height * dpr;
+    var ctx = c.getContext("2d");
+    ctx.scale(dpr, dpr);
+    var cols = ["#FFC800","#17429B","#C62A1C","#0B7A48","#ECEFF3"];
+    var parts = [];
+    for(var i=0;i<90;i++){
+      parts.push({
+        x: Math.random()*box.width,
+        y: -20 - Math.random()*box.height*0.6,
+        w: 5 + Math.random()*6,
+        h: 8 + Math.random()*8,
+        vy: 1.4 + Math.random()*2.4,
+        vx: -0.7 + Math.random()*1.4,
+        rot: Math.random()*Math.PI,
+        vr: -0.12 + Math.random()*0.24,
+        c: cols[Math.floor(Math.random()*cols.length)]
+      });
+    }
+    var frames = 0;
+    function tick(){
+      frames++;
+      ctx.clearRect(0,0,box.width,box.height);
+      var alive = 0;
+      parts.forEach(function(p){
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if(p.y < box.height + 30){ alive++; }
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      });
+      if(alive > 0 && frames < 420) requestAnimationFrame(tick);
+      else ctx.clearRect(0,0,box.width,box.height);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------------- Team ---------------- */
+
+  function renderMembers(){
+    var ul = $("memberChips");
+    ul.innerHTML = "";
+    state.members.forEach(function(name, idx){
+      var li = document.createElement("li");
+      li.className = "chip";
+      var span = document.createElement("span");
+      span.textContent = name;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-label", name + " entfernen");
+      b.textContent = "×";
+      b.addEventListener("click", function(){
+        state.members.splice(idx,1);
+        renderMembers(); save();
+      });
+      li.appendChild(span); li.appendChild(b);
+      ul.appendChild(li);
+    });
+    $("memberHint").hidden = state.members.length > 0;
+  }
+
+  function addMember(){
+    var inp = $("memberInput");
+    var v = inp.value.trim();
+    if(!v) { inp.focus(); return; }
+    if(state.members.length >= 16) return;
+    state.members.push(v);
+    inp.value = "";
+    inp.focus();
+    renderMembers();
+    save();
+  }
+
+  /* ---------------- Urkunde ---------------- */
+
+  function renderUrkunde(){
+    var team = state.team.trim();
+    $("uTeam").textContent = team || "Crew ohne Namen";
+
+    var ul = $("uNames");
+    ul.innerHTML = "";
+    var list = state.members.length ? state.members : ["(noch keine Namen eingetragen)"];
+    list.forEach(function(n){
+      var li = document.createElement("li");
+      li.textContent = n;
+      ul.appendChild(li);
+    });
+
+    var d = new Date();
+    var datum = String(d.getDate()).padStart(2,"0") + "." + String(d.getMonth()+1).padStart(2,"0") + "." + d.getFullYear();
+    $("uMeta").textContent = "Quiz: " + state.score + " von " + QUIZ.length + " richtig · " + datum;
+    setProgress(100, "Urkunde");
+  }
+
+  /* ---------------- Steuerung ---------------- */
+
+  $("btnStart").addEventListener("click", function(){
+    state.station = 0; show("screen-learn"); renderStation();
+  });
+  $("btnSkipToQuiz").addEventListener("click", function(){
+    state.qi = 0; state.score = 0; show("screen-quiz"); renderQuestion();
+  });
+  $("btnNext").addEventListener("click", function(){
+    if(state.station < STATIONS.length - 1){ state.station++; renderStation(); }
+    else { state.qi = 0; state.score = 0; show("screen-quiz"); renderQuestion(); }
+  });
+  $("btnPrev").addEventListener("click", function(){
+    if(state.station > 0){ state.station--; renderStation(); }
+  });
+  $("btnQuizNext").addEventListener("click", function(){
+    if(state.qi < QUIZ.length - 1){ state.qi++; renderQuestion(); }
+    else { show("screen-result"); renderResult(); }
+  });
+  $("btnRetry").addEventListener("click", function(){
+    state.qi = 0; state.score = 0; show("screen-quiz"); renderQuestion();
+  });
+  $("btnReview").addEventListener("click", function(){
+    state.station = 0; show("screen-learn"); renderStation();
+  });
+  $("btnToTeam").addEventListener("click", function(){
+    show("screen-team");
+    $("teamName").value = state.team;
+    renderMembers();
+    $("teamName").focus();
+  });
+  $("btnBackResult").addEventListener("click", function(){ show("screen-result"); });
+
+  $("btnAddMember").addEventListener("click", addMember);
+  $("memberInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); addMember(); }
+  });
+  $("teamName").addEventListener("input", function(){ state.team = this.value; save(); });
+
+  $("btnMakeUrkunde").addEventListener("click", function(){
+    state.team = $("teamName").value;
+    save();
+    show("screen-urkunde");
+    renderUrkunde();
+  });
+  $("btnEditTeam").addEventListener("click", function(){
+    show("screen-team");
+    $("teamName").value = state.team;
+    renderMembers();
+  });
+  $("btnRestart").addEventListener("click", function(){
+    state.station = 0; state.qi = 0; state.score = 0;
+    show("screen-start");
+    setProgress(0, "Station 1 / " + STATIONS.length);
+  });
+
+  document.addEventListener("keydown", function(e){
+    if($("screen-quiz").hidden) return;
+    var k = e.key.toUpperCase();
+    var map = {A:0,B:1,C:2,D:3};
+    if(k in map && !state.answered){
+      var btn = document.querySelector('.opt[data-i="' + map[k] + '"]');
+      if(btn) btn.click();
+    } else if(e.key === "Enter" && state.answered){
+      $("btnQuizNext").click();
+    }
+  });
+
+  load();
+  setProgress(0, "Station 1 / " + STATIONS.length);
+})();
+</script>
+
+</html>
